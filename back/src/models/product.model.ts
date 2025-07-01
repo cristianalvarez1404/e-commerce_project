@@ -1,36 +1,41 @@
 import mongoose from "mongoose";
 
-type UserMessage = {
-  id: number;
-  comment: string;
-};
-
 interface IProduct extends Document {
-  id: string | number;
-  name: string;
-  description: string;
-  quantity: number;
-  starts: number;
-  comments?: UserMessage[];
+  title: string;
+  short_description: string;
+  price: number;
+  inventory_id?: mongoose.Schema.Types.ObjectId;
+  image_id: mongoose.Schema.Types.ObjectId;
+  comments?: mongoose.Schema.Types.ObjectId[];
 }
 
-const ProductSchema = new mongoose.Schema<IProduct>({
-  name: {
-    type: String,
-    required: true,
+const ProductSchema = new mongoose.Schema<IProduct>(
+  {
+    title: {
+      type: String,
+      required: true,
+    },
+    short_description: {
+      type: String,
+      required: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+    },
+    inventory_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Inventory",
+      required: true,
+    },
+    image_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Image",
+      required: true,
+    },
+    comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
   },
-  description: {
-    type: String,
-    required: true,
-  },
-  quantity: {
-    type: Number,
-    required: true,
-  },
-  starts: {
-    type: Number,
-    required: true,
-  },
-});
+  { timestamps: true }
+);
 
 export default mongoose.model<IProduct>("Product", ProductSchema);
