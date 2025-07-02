@@ -1,12 +1,5 @@
 import mongoose from "mongoose";
-
-interface IUser extends Document {
-  username: string;
-  email: string;
-  phone?: string;
-  address?: string;
-  password: string;
-}
+import { IUser } from "../../interfaces/models-intefaces/user.interface";
 
 const UserSchema = new mongoose.Schema<IUser>(
   {
@@ -27,6 +20,7 @@ const UserSchema = new mongoose.Schema<IUser>(
     password: {
       type: String,
       required: true,
+      select: false,
     },
   },
   { timestamps: true }

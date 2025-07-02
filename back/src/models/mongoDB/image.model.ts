@@ -1,11 +1,7 @@
 import mongoose from "mongoose";
+import { IImage } from "../../interfaces/models-intefaces/image.interface.model";
 
-interface Image extends Document {
-  product_id: mongoose.Schema.Types.ObjectId;
-  urls: string[];
-}
-
-const ImageSchema = new mongoose.Schema<Image>(
+const ImageSchema = new mongoose.Schema<IImage>(
   {
     product_id: {
       type: mongoose.Schema.Types.ObjectId,

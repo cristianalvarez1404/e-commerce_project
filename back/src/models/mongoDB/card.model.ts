@@ -1,12 +1,5 @@
 import mongoose from "mongoose";
-
-interface ICard extends Document {
-  product_id: mongoose.Schema.Types.ObjectId;
-  user_id: mongoose.Schema.Types.ObjectId;
-  quantity: number;
-  price: number;
-  date: Date;
-}
+import { ICard } from "../../interfaces/models-intefaces/card.interface";
 
 const CardSchema = new mongoose.Schema<ICard>(
   {

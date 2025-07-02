@@ -1,15 +1,6 @@
 import mongoose from "mongoose";
-import { TYPE_SHOP, CATEGORIES, COLORS, SIZE } from "./enums/shop.enums";
-
-interface IInventory extends Document {
-  product_id: mongoose.Schema.Types.ObjectId;
-  type: TYPE_SHOP[];
-  categorie: CATEGORIES[];
-  color: COLORS[];
-  size: SIZE[];
-  units_available: number;
-  cost_per_unit: number;
-}
+import { TYPE_SHOP, CATEGORIES, COLORS, SIZE } from "../../enums/shop.enums";
+import { IInventory } from "../../interfaces/models-intefaces/inventory.interface";
 
 const InventorySchema = new mongoose.Schema<IInventory>(
   {
