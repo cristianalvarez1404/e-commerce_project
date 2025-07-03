@@ -2,7 +2,7 @@
 ### Users
 
 ### Create user
-POST http://localhost:3000/users/
+POST http://localhost:3000/users/register
 Content-Type: application/json
 
 {
@@ -10,5 +10,23 @@ Content-Type: application/json
   "email":"cristian@gmail.com", 
   "phone":123456789,
   "address":"Av 8", 
+  "password":"123456789"
+}
+
+### Login user
+POST http://localhost:3000/users/login
+Content-Type: application/json
+
+{
+  "email":"cristian@gmail.com", 
+  "password":"123456789"
+}
+
+### Logout user
+POST http://localhost:3000/users/logout
+Content-Type: application/json
+
+{
+  "email":"cristian@gmail.com", 
   "password":"123456789"
 }
