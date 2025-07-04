@@ -27,13 +27,13 @@ const validateUserToken = async (
       return res.status(401).json({ message: "Invalid credential" });
     }
 
-    const user = await User.findById(payload.userId).select("+password");
+    const user = await User.findById(payload.userId);
 
     if (!user) {
       return res.status(401).json({ message: "Invalid credential" });
     }
 
-    (req as any).user = user;
+    req.user = user;
 
     next();
   } catch (err) {

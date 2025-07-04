@@ -22,6 +22,10 @@ const UserSchema = new mongoose.Schema<IUser>(
       required: true,
       select: false,
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );

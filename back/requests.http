@@ -14,13 +14,34 @@ Content-Type: application/json
 }
 
 ### Login user
-POST http://localhost:3000/users/login
+POST http://localhost:3000/users/login/
 Content-Type: application/json
 
 {
   "email":"cristian@gmail.com", 
-  "password":"123456789"
+  "password":"123"
 }
+
+### Update user
+PUT http://localhost:3000/users/update/68658d36e5b4b1893aa88432
+Content-Type: application/json
+
+{
+  "username":"cris 2025",
+  "phone":555555555555,
+  "address":"CR 5"
+}
+
+### Update user password
+PUT http://localhost:3000/users/update-password/68658d36e5b4b1893aa88432
+Content-Type: application/json
+
+{
+  "newPassword":"123", 
+  "repetedPassword":"123", 
+  "oldPassword":"123456789"
+}
+
 
 ### Logout user
 POST http://localhost:3000/users/logout
@@ -29,4 +50,13 @@ Content-Type: application/json
 {
   "email":"cristian@gmail.com", 
   "password":"123456789"
+}
+
+
+### delete user
+DELETE http://localhost:3000/users/delete/68658d36e5b4b1893aa88432
+Content-Type: application/json
+
+{
+  
 }
