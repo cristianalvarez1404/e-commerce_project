@@ -15,15 +15,18 @@ const ProductSchema = new mongoose.Schema<IProduct>(
       type: Number,
       required: true,
     },
+    reference: {
+      type: String,
+      unique: true,
+      required: true,
+    },
     inventory_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Inventory",
-      required: true,
     },
     image_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Image",
-      required: true,
     },
     comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
   },

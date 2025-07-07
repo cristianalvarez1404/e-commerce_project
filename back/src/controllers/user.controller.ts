@@ -4,6 +4,45 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { IUser } from "../interfaces/models-intefaces/user.interface";
 
+const getUsers = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const users = await User.find();
+
+    if (!users) {
+      return res.status(400).json({ message: "Users does not exists" });
+    }
+
+    return res.status(200).json(users);
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(400).json({ message: error.message });
+    }
+    return res.status(400).json({ message: error });
+  }
+};
+
+const getUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const idUser = req.params.id;
+
+    if (req.user._id.toString() !== idUser) {
+      return res.status(403).json({ message: "You don't have permission!" });
+    }
+
+    const user = await User.findById(idUser);
+    if (!user) {
+      return res.status(400).json({ message: "User does not exists" });
+    }
+
+    return res.status(200).json(user);
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(400).json({ message: error.message });
+    }
+    return res.status(400).json({ message: error });
+  }
+};
+
 const createUser = async (req: Request, res: Response) => {
   const { username, email, phone, address, password }: IUser = req.body;
 
@@ -296,4 +335,13 @@ const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-export { createUser, login, logout, updateUser, updatePassword, deleteUser };
+export {
+  getUsers,
+  getUser,
+  createUser,
+  login,
+  logout,
+  updateUser,
+  updatePassword,
+  deleteUser,
+};

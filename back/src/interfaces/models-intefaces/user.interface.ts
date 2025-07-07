@@ -4,5 +4,6 @@ export interface IUser extends Document {
   phone?: string;
   address?: string;
   password: string;
-  isActive: true;
+  isActive: boolean;
+  typeUser: string;
 }

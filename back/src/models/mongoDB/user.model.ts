@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { IUser } from "../../interfaces/models-intefaces/user.interface";
+import { TYPEUSER } from "../../enums/shop.enums";
 
 const UserSchema = new mongoose.Schema<IUser>(
   {
@@ -25,6 +26,11 @@ const UserSchema = new mongoose.Schema<IUser>(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    typeUser: {
+      type: String,
+      enum: TYPEUSER,
+      default: TYPEUSER.CUSTOMER,
     },
   },
   { timestamps: true }

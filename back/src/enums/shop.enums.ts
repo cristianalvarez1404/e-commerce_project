@@ -25,3 +25,9 @@ export enum SIZE {
   L = "Large",
   XL = "Extra Large",
 }
+
+export enum TYPEUSER {
+  ADMIN = "admin",
+  STAFF = "staff",
+  CUSTOMER = "customer",
+}

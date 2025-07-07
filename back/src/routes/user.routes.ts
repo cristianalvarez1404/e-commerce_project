@@ -6,11 +6,16 @@ import {
   updateUser,
   updatePassword,
   deleteUser,
+  getUsers,
+  getUser,
 } from "../controllers/user.controller";
 import validateUserToken from "../middlewars/validateUserToken";
+import { validateUserIsAdmin } from "../middlewars/validateUserIsAdmin";
 
 const userRouter = express.Router();
 
+userRouter.get("/", validateUserToken, validateUserIsAdmin, getUsers);
+userRouter.get("/:id", validateUserToken, getUser);
 userRouter.post("/register", createUser);
 userRouter.post("/login", login);
 userRouter.post("/logout", validateUserToken, logout);
