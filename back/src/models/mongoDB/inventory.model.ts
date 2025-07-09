@@ -37,6 +37,9 @@ const InventorySchema = new mongoose.Schema<IInventory>(
       type: Number,
       required: true,
     },
+    units_sold: {
+      type: Number,
+    },
   },
   { timestamps: true }
 );

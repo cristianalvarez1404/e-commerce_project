@@ -1,0 +1,15 @@
+### CREATE Inventory
+
+POST http://localhost:3000/inventory
+Content-Type: application/json
+
+{
+  "product_id": "686bf9af6eabe4eb3cc04491",
+  "type": ["WOMEN"],
+  "categorie": ["SPORT"],
+  "color": ["WHITE"],
+  "size": ["S"],
+  "units_available": 200,
+  "cost_per_unit": 42,
+  "units_sold": 2
+}

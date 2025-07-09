@@ -1,8 +1,8 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 
 export interface ICard extends Document {
-  product_id: mongoose.Schema.Types.ObjectId;
-  user_id: mongoose.Schema.Types.ObjectId;
+  product_id: Types.ObjectId;
+  user_id: Types.ObjectId;
   quantity: number;
   price: number;
   date: Date;
