@@ -1,3 +1,9 @@
+### GET inventories
+GET http://localhost:3000/inventory
+
+### GET inventory by id
+GET http://localhost:3000/inventory/68700c30e622231ff799f622
+
 ### CREATE Inventory
 
 POST http://localhost:3000/inventory
@@ -12,4 +18,29 @@ Content-Type: application/json
   "units_available": 200,
   "cost_per_unit": 42,
   "units_sold": 2
+}
+
+### UPDATE Inventory
+
+PUT http://localhost:3000/inventory/686ebfb08ec6bb4b062a5b41
+Content-Type: application/json
+
+{
+  "product_id":"686bf91ad217b8c026f3ace6",
+  "type": ["MEN"],
+  "categorie": ["CASUAL"],
+  "color": ["RED"],
+  "size": ["Large"],
+  "units_available": 400,
+  "cost_per_unit": 40,
+  "units_sold": 3
+}
+
+### UPDATE Inventory
+
+DELETE http://localhost:3000/inventory/68700c30e622231ff799f622
+Content-Type: application/json
+
+{
+
 }

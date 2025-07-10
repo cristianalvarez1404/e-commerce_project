@@ -4,7 +4,10 @@ GET http://localhost:3000/products
 
 ### GET PRODUCT BY ID
 
-GET http://localhost:3000/products/686bfa2f7531bca8d4ccf11d
+GET http://localhost:3000/products/686bf9af6eabe4eb3cc04491
+
+### GET PRODUCT BY ID
+GET http://localhost:3000/products/686bf9af6eabe4eb3cc04491
 
 
 ### CREATE PRODUCT

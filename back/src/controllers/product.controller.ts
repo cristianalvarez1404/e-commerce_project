@@ -5,7 +5,10 @@ import { z } from "zod";
 
 const getProducts = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
+    const products = await Product.find()
+      .sort({ createdAt: -1 })
+      .populate("inventory_id")
+      .select("-__v");
 
     return res.status(200).json(products);
   } catch (error) {
