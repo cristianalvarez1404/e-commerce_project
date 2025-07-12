@@ -3,25 +3,32 @@ import { ICard } from "../../interfaces/models-intefaces/card.interface";
 
 const CardSchema = new mongoose.Schema<ICard>(
   {
-    product_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Product",
-      required: true,
-    },
+    products: [
+      {
+        product_id: mongoose.Schema.Types.ObjectId,
+        quantity: {
+          type: Number,
+          min: 0,
+          required: true,
+        },
+        price: {
+          type: Number,
+          min: 0,
+          required: true,
+        },
+        ref: "Product",
+        required: true,
+      },
+    ],
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    quantity: {
-      type: Number,
-      min: 0,
-      required: true,
-    },
-    price: {
-      type: Number,
-      min: 0,
-      required: true,
+
+    state: {
+      type: String,
+      default: "pending",
     },
     date: {
       type: Date,

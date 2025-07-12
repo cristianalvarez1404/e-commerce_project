@@ -1,52 +1,99 @@
-import { NextFunction, Response,Request } from "express";
+import { NextFunction, Response, Request } from "express";
 import { IProduct } from "../interfaces/models-intefaces/product.interface";
 import Product from "../models/mongoDB/product.model";
+import mongoose, { ObjectId } from "mongoose";
+import Inventory from "../models/mongoDB/inventory.model";
+import { IInventory } from "../interfaces/models-intefaces/inventory.interface";
+import Cart from "../models/mongoDB/cart.model";
 
 type ProductToBuy = {
-    idProduct:string;
-    unitsToBuy:number
-}
+  idProduct: string;
+  unitsToBuy: number;
+};
+const createCart = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const products: ProductToBuy[] = req.body;
+    const cartProducts = []
 
-const createCart = async(req:Request,res:Response,next:NextFunction) => {
-    try{
-        //get products from request.
-        const products:ProductToBuy[]= req.body
-
-        if(products.length === 0){
-            return res.status(400).json({message:"Products does not exist!"})
-        }
-
-        //validate products duplicate
-        const ids = products.map((p) => p.idProduct)
-        const uniqueIds = [...new Set(ids)]
-
-        if(uniqueIds.length !== products.length){
-            return res.status(400).json({message:"You have duplicate products, please check it!"})
-        }
-
-        //validate products exists in product'db
-        const productChecks = products.map((product) => 
-            Product.findById(product.idProduct)
-        )
-
-        const foundProducts = await Promise.all(productChecks)
-        const someNotFound = foundProducts.some((product) => product === null)
-
-        if(someNotFound){
-            return res.status(400).json({message:"One or more products does not exist!"})
-        }
-
-        //validate there are units in inventory'db
-        
-
-        //decrease units in inventory'model
-        //increase units sold in inventory'model
-        //calculate sale price to product
-        //calculate cost of sale to product
-        //create cart with state pending
-        //return cart with all info - except cost of sale
-
-    }catch(error){
-
+    if (!Array.isArray(products) || products.length === 0) {
+      return res.status(400).json({ message: "Products do not exist!" });
     }
-}
+
+    // validate duplicate products
+    const ids = products.map((p) => p.idProduct);
+    const uniqueIds = new Set(ids);
+
+    if (uniqueIds.size !== products.length) {
+      return res
+        .status(400)
+        .json({ message: "You have duplicate products, please check it!" });
+    }
+
+    // search products with property invetory_id
+    const foundProducts = await Promise.all(
+      products.map((p) =>
+        Product.findById(p.idProduct).populate("inventory_id")
+      )
+    );
+
+    // verify products not founded
+    if (foundProducts.includes(null)) {
+      return res
+        .status(400)
+        .json({ message: "One or more products do not exist!" });
+    }
+
+    // validate inventory available in each product
+    for (const product of foundProducts) {
+      const matched = products.find(
+        (p) => p.idProduct === product?._id.toString()
+      );
+
+      if (!matched) {
+        return res.status(400).json({
+          message: `Product ${product?._id} does not match with request body`,
+        });
+      }
+
+      const inventory = await Inventory.findById(product?.inventory_id);
+
+      if (!inventory) {
+        return res.status(400).json({
+          message: `Inventory not found for product ${product?._id}`,
+        });
+      }
+
+      if (
+        inventory.units_available < matched.unitsToBuy ||
+        inventory.units_available === 0
+      ) {
+        return res.status(400).json({
+          message: `Not enough units for product with id ${product?._id}`,
+        });
+      }
+
+      // update inventory
+      inventory.units_available -= matched.unitsToBuy;
+      inventory.units_sold += matched.unitsToBuy;
+      await inventory.save();
+
+      cartProducts.push({
+        product_id:product?._id,
+        quantity: matched.unitsToBuy,
+        price: product?.price,
+      })
+      
+    }
+
+    //Create new cart
+    const newCart = await Cart.create({
+      products: cartProducts,
+      user_id: req.user._id,
+    });
+
+    return res.status(201).json(newCart);
+  } catch (error) {
+    console.error("Create cart error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
