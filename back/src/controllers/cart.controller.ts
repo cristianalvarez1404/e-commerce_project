@@ -10,13 +10,63 @@ type ProductToBuy = {
   idProduct: string;
   unitsToBuy: number;
 };
+
+const getCarts = async(req:Request,res:Response,next:NextFunction) => {
+  try {
+    //Get carts from db and add product's detail
+    const carts = await Cart.find().populate('products.product_id')
+
+    if(carts.length === 0) {
+      return res.status(400).json({message:"Sorry, you do not have carts created!"})
+    }
+    //return carts
+    return res.status(200).json(carts)
+
+  }catch(error){
+    if(error instanceof Error){
+      return res.status(400).json({message:error.message})
+    }
+    return res.status(400).json({message:error})
+  }
+}
+
+const getCartById= async(req:Request,res:Response,next:NextFunction) => {
+  try {
+    //Get carts from db and add product's detail
+    const {id} = req.params;
+
+    const cart = await Cart.findById(id).populate('products.product_id')
+
+    if(!cart) {
+      return res.status(400).json({message:"Sorry, you do not have cart!"})
+    }
+    //return carts
+    return res.status(200).json(cart)
+
+  }catch(error){
+    if(error instanceof Error){
+      return res.status(400).json({message:error.message})
+    }
+    return res.status(400).json({message:error})
+  }
+}
+
+
 const createCart = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const products: ProductToBuy[] = req.body;
-    const cartProducts = []
+    const cartProducts = [];
 
     if (!Array.isArray(products) || products.length === 0) {
       return res.status(400).json({ message: "Products do not exist!" });
+    }
+
+    for (const p of products) {
+      if (!mongoose.isValidObjectId(p.idProduct)) {
+        return res
+          .status(400)
+          .json({ message: `Invalid product_id: ${p.idProduct}` });
+      }
     }
 
     // validate duplicate products
@@ -78,13 +128,12 @@ const createCart = async (req: Request, res: Response, next: NextFunction) => {
       await inventory.save();
 
       cartProducts.push({
-        product_id:product?._id,
+        product_id: product?._id,
         quantity: matched.unitsToBuy,
         price: product?.price,
-      })
-      
+      });
     }
-
+    //console.log(req.user)
     //Create new cart
     const newCart = await Cart.create({
       products: cartProducts,
@@ -97,3 +146,5 @@ const createCart = async (req: Request, res: Response, next: NextFunction) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export { createCart , getCarts, getCartById};

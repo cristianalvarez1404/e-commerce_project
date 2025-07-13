@@ -5,7 +5,11 @@ const CardSchema = new mongoose.Schema<ICard>(
   {
     products: [
       {
-        product_id: mongoose.Schema.Types.ObjectId,
+        product_id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+          required: true,
+        },
         quantity: {
           type: Number,
           min: 0,
@@ -16,8 +20,6 @@ const CardSchema = new mongoose.Schema<ICard>(
           min: 0,
           required: true,
         },
-        ref: "Product",
-        required: true,
       },
     ],
     user_id: {

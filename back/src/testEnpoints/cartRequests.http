@@ -1,0 +1,22 @@
+### GET CARTS
+GET http://localhost:3000/carts
+
+### GET CARTS
+GET http://localhost:3000/carts/6873f33b27e4828cec59d739A
+
+
+### CREATE CART
+
+POST http://localhost:3000/carts/
+Content-Type: application/json
+
+[
+    {
+        "idProduct":"686bfa2f7531bca8d4ccf11d",
+        "unitsToBuy": 5
+    },
+    {
+        "idProduct":"686bf91ad217b8c026f3ace6",
+        "unitsToBuy": 2
+    }
+]

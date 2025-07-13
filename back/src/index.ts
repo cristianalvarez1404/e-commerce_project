@@ -18,7 +18,7 @@ app.use(cookieParser());
 app.use("/users", userRouter);
 app.use("/products", productRouter);
 app.use("/inventory", inventoryRouter);
-app.use("/card", cardRouter);
+app.use("/carts", cardRouter);
 
 app.use(
   "*",
