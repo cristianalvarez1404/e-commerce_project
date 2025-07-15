@@ -2,7 +2,7 @@
 GET http://localhost:3000/inventory
 
 ### GET inventory by id
-GET http://localhost:3000/inventory/68700c30e622231ff799f622
+GET http://localhost:3000/inventory/686ebf0a8ec6bb4b062a5b33
 
 ### CREATE Inventory
 

@@ -163,6 +163,16 @@ const updateCartById = async (
     const { id } = req.params;
     const productsToUpdate: ProductToUpdate[] = req.body;
 
+    // Check all params was passed
+    if(!productsToUpdate.every(p => p.idProduct && p.prevUnits && p.unitsToBuy)){
+      return res.status(400).json({message:"Invalid product data in request body"})
+    }
+
+    // Check positive values
+    if(!productsToUpdate.every(p => p.prevUnits >= 0 && p.unitsToBuy >= 0)){
+      return res.status(400).json({message:"Invalid product data in request body"})
+    }
+
     // Check if the cart exists
     const cartExists = await Cart.findById(id);
     if (!cartExists) {
@@ -234,7 +244,7 @@ const updateCartById = async (
       updatedCartProducts.push({
         product_id: product._id,
         quantity: productToUpdate.unitsToBuy,
-        price: product.price, // Make sure 'price' exists in your Product model
+        price: product.price, 
       });
     }
 
@@ -259,9 +269,35 @@ const deleteCartById = async (
 ) => {
   try {
     //search cart by id and validate if exist
+    const {id} = req.params
+
+    const cartExists = await Cart.findById(id).populate("products.product_id")
+
+    if(!cartExists){
+      return res.status(400).json({message:"Cart does not exist"})
+    }
+
     //update inventory - increse exists and decrease units sold in inventory'model
+    for(const product of cartExists.products){
+      const productToUpdate = await Product.findById(product.product_id).populate("inventory_id")
+
+      if(!productToUpdate) return res.status(400).json({message:`Product with id ${product.product_id} does not exists`})
+
+      const inventoryToUpdate = await Inventory.findById(productToUpdate.inventory_id)
+
+      if(!inventoryToUpdate) return res.status(400).json({message:"Inventory does not exist for the product" + productToUpdate._id.toString()})
+
+      inventoryToUpdate.units_available += product.quantity
+      inventoryToUpdate.units_sold -= product.quantity
+      
+      await inventoryToUpdate.save()
+    }
+
     //delete cart
+    await cartExists.deleteOne()
+
     //return message
+    return res.status(200).json({message:`Cart with id ${cartExists._id.toString()} has been deleted`})
   } catch (error) {
     if (error instanceof Error) {
       return res.status(400).json({ message: error.message });

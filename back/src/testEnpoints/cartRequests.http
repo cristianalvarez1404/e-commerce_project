@@ -1,8 +1,8 @@
 ### GET CARTS
 GET http://localhost:3000/carts
 
-### GET CARTS
-GET http://localhost:3000/carts/6873f33b27e4828cec59d739A
+### GET CART
+GET http://localhost:3000/carts/6873f33b27e4828cec59d739
 
 
 ### CREATE CART
@@ -20,3 +20,31 @@ Content-Type: application/json
         "unitsToBuy": 2
     }
 ]
+
+### UPDATE CART
+
+PUT http://localhost:3000/carts/6873ef1e807aa27b714b811f
+Content-Type: application/json
+
+[
+    {
+        "idProduct":"686bfa2f7531bca8d4ccf11d",
+        "unitsToBuy": 5,
+        "prevUnits":6
+        
+    },
+    {
+        "idProduct":"686bf91ad217b8c026f3ace6",
+        "unitsToBuy": 4,
+        "prevUnits":2
+    }
+]
+
+### DELETE CART
+
+DELETE http://localhost:3000/carts/6873f33b27e4828cec59d739
+Content-Type: application/json
+
+{
+
+}

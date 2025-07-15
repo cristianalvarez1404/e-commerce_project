@@ -1,0 +1,11 @@
+### POST CREATE COMMENT
+
+POST http://localhost:3000/comments
+Content-Type: application/json
+
+{
+    "product_id": "686bfa2f7531bca8d4ccf11d",
+    "comment": "awesome product",
+    "liked": true,
+    "star": 5
+}

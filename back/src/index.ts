@@ -3,6 +3,7 @@ import userRouter from "./routes/user.routes";
 import productRouter from "./routes/products.routes";
 import inventoryRouter from "./routes/inventory.routes";
 import cartRouter from "./routes/cart.routes";
+import commentRouter from "./routes/comment.routes";
 import { dbConnection } from "./db/db";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
@@ -19,6 +20,7 @@ app.use("/users", userRouter);
 app.use("/products", productRouter);
 app.use("/inventory", inventoryRouter);
 app.use("/carts", cartRouter);
+app.use("/comments",commentRouter)
 
 app.use(
   "*",
