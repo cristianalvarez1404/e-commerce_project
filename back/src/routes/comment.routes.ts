@@ -7,7 +7,7 @@ const commentRouter = express.Router()
 commentRouter.get("/",getComments)
 commentRouter.get("/:id",getCommentById)
 commentRouter.post("",validateUserToken,createComment)
-commentRouter.put("/:id",updateCommentById)
-commentRouter.delete("/:id",deleteCommentById)
+commentRouter.put("/:id",validateUserToken,updateCommentById)
+commentRouter.delete("/:id",validateUserToken,deleteCommentById)
 
 export default commentRouter
