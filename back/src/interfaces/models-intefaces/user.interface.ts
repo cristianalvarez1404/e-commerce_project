@@ -4,6 +4,16 @@ export interface IUser extends Document {
   phone?: string;
   address?: string;
   password: string;
-  isActive: boolean;
-  typeUser: string;
+  isActive?: boolean;
+  typeUser?: string;
+}
+
+export interface IUser_ {
+  username: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  password: string;
+  isActive?: boolean;
+  typeUser?: string;
 }

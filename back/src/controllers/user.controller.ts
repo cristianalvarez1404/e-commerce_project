@@ -3,10 +3,15 @@ import User from "../models/mongoDB/user.model";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { IUser } from "../interfaces/models-intefaces/user.interface";
+import { UserService } from "../services/user.service";
+import { MongoUserDAO } from "../dao/MongoUserDAO";
+
+const db = new MongoUserDAO();
+const userService = new UserService(db);
 
 const getUsers = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const users = await User.find();
+    const users = await userService.getUsers();
 
     if (!users) {
       return res.status(400).json({ message: "Users does not exists" });
@@ -29,7 +34,7 @@ const getUser = async (req: Request, res: Response, next: NextFunction) => {
       return res.status(403).json({ message: "You don't have permission!" });
     }
 
-    const user = await User.findById(idUser);
+    const user = await userService.getUser(idUser);
     if (!user) {
       return res.status(400).json({ message: "User does not exists" });
     }
@@ -44,52 +49,19 @@ const getUser = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 const createUser = async (req: Request, res: Response) => {
-  const { username, email, phone, address, password }: IUser = req.body;
-
-  if (!username || !email || !password) {
-    return res
-      .status(400)
-      .json({ message: "Please, check all fields required" });
-  }
-
   try {
-    const user = await User.findOne({ username });
-    if (user) return res.status(400).json({ message: "User already exists!" });
+    const userData = req.body;
+    const { user, token } = await userService.createUser(userData);
 
-    const newPassword = await bcrypt.hash(password, 10);
-    const newUser = await User.create({
-      username,
-      email,
-      phone,
-      address,
-      password: newPassword,
-    });
-
-    const { password: _, ...userWithoutPassword } = newUser.toObject();
-
-    const token = jwt.sign(
-      { userId: userWithoutPassword._id },
-      process.env.JWT_SECRET as string,
-      {
-        expiresIn: "10m",
-      }
-    );
-
-    const configCookie = {
+    const cookieConfig = {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
     };
 
-    return res
-      .cookie("token", token, configCookie)
-      .status(201)
-      .json(userWithoutPassword);
+    return res.cookie("token", token, cookieConfig).status(201).json(user);
   } catch (error) {
-    if (error instanceof Error) {
-      return res.status(400).json({ message: error.message });
-    }
-    return res.status(400).json({ message: error });
+    return res.status(400).json({ message: (error as Error).message });
   }
 };
 
@@ -219,11 +191,7 @@ const updateUser = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-const updatePassword = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const updatePassword = async (req: Request, res: Response) => {
   try {
     //get id param and validate id is not null
     //get newpassword,repetedPassword,oldpassword from req.body - check there are not empty
