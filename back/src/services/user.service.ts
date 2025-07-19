@@ -1,6 +1,10 @@
 import { IUserDAO } from "../dao/IUserDAO";
 import { IUser, IUser_ } from "../interfaces/models-intefaces/user.interface";
-import { IUserService } from "./IUserService";
+import {
+  IUserService,
+  userParamsToUpdate,
+  userUpdatePassword,
+} from "./IUserService";
 import bcrypt from "bcrypt";
 import jwt, { Jwt } from "jsonwebtoken";
 
@@ -18,7 +22,7 @@ export class UserService implements IUserService {
   public async getUsers(): Promise<IUser[] | null> {
     const users = await this.db.getUsers();
     if (!users) {
-      throw new Error("Therea are not users!");
+      throw new Error("There are not users!");
     } else {
       return users;
     }
@@ -38,7 +42,7 @@ export class UserService implements IUserService {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const createdUser = await this.db.createUser({
+    const createdUser: IUser_ = await this.db.createUser({
       username,
       email,
       phone,
@@ -57,13 +61,117 @@ export class UserService implements IUserService {
     return { user: userWithoutPassword, token };
   }
 
-  public login() {}
+  public async login(email: string, password: string) {
+    const userExists = await this.db.getUserByEmail(email);
 
-  public logout() {}
+    if (!userExists) {
+      throw "Invalid credentials";
+    }
 
-  public updateUser() {}
+    //compare passwords
+    const validatePassword = await bcrypt.compare(
+      password,
+      userExists.password
+    );
 
-  public updatePassword() {}
+    if (!validatePassword) {
+      throw "Invalid credentialss";
+    }
 
-  public deleteUser() {}
+    //return user without password
+    const { password: _, ...userWithoutPassword } = userExists;
+
+    const token = jwt.sign(
+      { userId: userWithoutPassword._id },
+      process.env.JWT_SECRET as string,
+      {
+        expiresIn: "10m",
+      }
+    );
+
+    return { user: userWithoutPassword, token };
+  }
+
+  public async updateUser(userParams: userParamsToUpdate) {
+    const { userId, userIdLogged, username, phone, address } = userParams;
+
+    const user = await this.db.getUser(userId);
+
+    if (!user) {
+      throw "Invalid cretentials !";
+    }
+
+    //compare user from db to user from req.user
+    if (userId !== userIdLogged) {
+      throw "Unauthorized: user mismatch!";
+    }
+
+    //update user info
+    const updatedUser = await this.db.updateUser({
+      userId,
+      user: {
+        username,
+        phone,
+        address,
+      },
+      params: {
+        new: true,
+      },
+    });
+
+    return updatedUser;
+  }
+
+  public async updatePassword(userParams: userUpdatePassword) {
+    const { userId, userIdLogged, oldPassword, repetedPassword, newPassword } =
+      userParams;
+
+    const user = await this.db.getUser(userId);
+
+    if (!user) {
+      throw "User not found!";
+    }
+
+    if (userId !== userIdLogged) {
+      throw "Unauthorized: user mismatch!";
+    }
+
+    const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+
+    if (!isPasswordValid) {
+      throw "Incorrect current password!!";
+    }
+
+    if (newPassword === oldPassword) {
+      throw "Password are the same, change them!!";
+    }
+
+    if (newPassword !== repetedPassword) {
+      throw "Passwords do not match!";
+    }
+
+    const newPasswordEncrypted = await bcrypt.hash(newPassword, 10);
+
+    const userPasswordUpdated = await this.db.updatePassword({
+      userId,
+      password: newPasswordEncrypted,
+      params: { new: true },
+    });
+
+    return userPasswordUpdated;
+  }
+
+  public async deleteUser(userId: string, userIdLogged: string) {
+    const user = await this.db.getUser(userId);
+
+    if (!user) {
+      throw "User not found!";
+    }
+
+    if (user._id !== userIdLogged) {
+      throw "Unauthorized: user mismatch!";
+    }
+
+    await this.db.deleteUser(userId, false);
+  }
 }

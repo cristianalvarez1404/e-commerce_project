@@ -1,35 +1,41 @@
 import { IUser, IUser_ } from "../interfaces/models-intefaces/user.interface";
 import "../models/mongoDB/user.model";
 import User from "../models/mongoDB/user.model";
-import { IUserDAO } from "./IUserDAO";
+import { IUserDAO, newUserPassword, newUserToUpdate } from "./IUserDAO";
 
 export class MongoUserDAO implements IUserDAO {
-  async getUser(id: string | number): Promise<IUser | null> {
-    return await User.findById(id);
+  public async getUser(id: string | number): Promise<IUser | null> {
+    return await User.findById(id).select("+password");
   }
-  async getUsers(): Promise<IUser[] | null> {
+  public async getUsers(): Promise<IUser[] | null> {
     return await User.find().sort("-createAt");
   }
-  async getUserByName(name: string): Promise<IUser | null> {
-    return await User.findOne({ name });
+  public async getUserByName(name: string): Promise<IUser | null> {
+    return await User.findOne({ name }).select("+password");
   }
-  async createUser(user: IUser_): Promise<IUser> {
+  public async getUserByEmail(email: string): Promise<IUser | null> {
+    return await User.findOne({ email }).select("+password");
+  }
+  public async createUser(user: IUser_): Promise<IUser> {
     return (await User.create(user)).toObject();
   }
 
-  login(): IUser {
-    return { message: "" };
+  public async updateUser(params: newUserToUpdate): Promise<IUser | null> {
+    const { userId, user, params: newUser } = params;
+
+    return await User.findByIdAndUpdate(userId, user, newUser);
   }
-  logout(): void {
-    return { message: "" };
+
+  public async updatePassword(params: newUserPassword): Promise<IUser | null> {
+    const { userId, password, params: newUser } = params;
+
+    return await User.findByIdAndUpdate(userId, { password }, newUser);
   }
-  updateUser(): IUser {
-    return { message: "" };
-  }
-  updatePassword(): IUser {
-    return { message: "" };
-  }
-  deleteUser(): IUser {
-    return { message: "" };
+
+  public async deleteUser(
+    userId: string,
+    isActive: boolean
+  ): Promise<IUser | null> {
+    return await User.findByIdAndUpdate(userId, { isActive });
   }
 }
