@@ -1,10 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-import User from "../models/mongoDB/user.model";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import { IUser } from "../interfaces/models-intefaces/user.interface";
-import { UserService } from "../services/user.service";
-import { MongoUserDAO } from "../dao/MongoUserDAO";
+import { UserService } from "../services/user/user.service";
+import { MongoUserDAO } from "../dao/user/MongoUserDAO";
 
 const db = new MongoUserDAO();
 const userService = new UserService(db);
@@ -156,7 +152,6 @@ const updatePassword = async (req: Request, res: Response) => {
     if (!newPassword || !repetedPassword || !oldPassword)
       return res.status(400).json({ message: "Field are incompleted!" });
 
-    //validate user is login
     if (!req.user) {
       return res
         .status(401)
@@ -186,14 +181,13 @@ const updatePassword = async (req: Request, res: Response) => {
 
 const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    //get id by params and validate that it's not empty
     const userId = req.params.id;
 
     if (!userId)
       return res
         .status(400)
         .json({ message: "User ID  is required in params!" });
-    //validate user has been update
+
     if (!req.user) {
       return res.status(401).json({ message: "You have to login!" });
     }

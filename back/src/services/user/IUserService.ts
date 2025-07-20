@@ -2,7 +2,7 @@ import {
   IUser,
   IUser_,
   IUser_reponse,
-} from "../interfaces/models-intefaces/user.interface";
+} from "../../interfaces/models-intefaces/user.interface";
 
 export type userParamsToUpdate = {
   userId: string | number;

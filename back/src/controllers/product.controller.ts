@@ -2,13 +2,15 @@ import mongoose from "mongoose";
 import { NextFunction, Request, Response } from "express";
 import Product from "../models/mongoDB/product.model";
 import { z } from "zod";
+import { MongoProductDAO } from "../dao/product/MongoProductDAO";
+import { ProductService } from "../services/product/product.service";
+
+const db = new MongoProductDAO();
+const productService = new ProductService(db);
 
 const getProducts = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const products = await Product.find()
-      .sort({ createdAt: -1 })
-      .populate("inventory_id")
-      .select("-__v");
+    const products = await productService.getProducts();
 
     return res.status(200).json(products);
   } catch (error) {
@@ -19,22 +21,11 @@ const getProducts = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-const getProductById = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const getProductById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const product = await Product.findById(id).populate({
-      path: "inventory_id",
-      select: "-__v",
-    });
-
-    if (!product) {
-      return res.status(400).json({ message: "Product does not exists!" });
-    }
-
+    
+    const product = productService.getProductById(id)
     return res.status(200).json(product);
   } catch (error) {
     if (error instanceof Error) {
@@ -44,14 +35,9 @@ const getProductById = async (
   }
 };
 
-const createProduct = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const createProduct = async (req: Request, res: Response) => {
   try {
-    //set middleware to verify only admin or staff can create product
-    //recibe info from front and validate type of data with zod and product inteface
+    
     const productSchemaValidation = z.object({
       title: z.string(),
       short_description: z.string(),
@@ -72,31 +58,8 @@ const createProduct = async (
 
     const productData = productDataValidation.data;
 
-    //validate product reference does not exist
-    const productExist = await Product.findOne({
-      reference: productData.reference,
-    });
+    const productSaved = productService.createProduct(productData)
 
-    if (productExist) {
-      return res
-        .status(400)
-        .json({ message: "Product already exists with this reference" });
-    }
-
-    const newProductData = {
-      ...productData,
-      inventory_id: productData.inventory_id
-        ? new mongoose.Types.ObjectId(productData.inventory_id)
-        : undefined,
-      image_id: productData.image_id
-        ? new mongoose.Types.ObjectId(productData.image_id)
-        : undefined,
-      comments: productData.comments?.map(
-        (id) => new mongoose.Types.ObjectId(id)
-      ),
-    };
-
-    const productSaved = await Product.create(newProductData);
     return res.status(201).json(productSaved);
   } catch (error) {
     error instanceof Error
@@ -105,11 +68,7 @@ const createProduct = async (
   }
 };
 
-const updateProduct = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const updateProduct = async (req: Request, res: Response) => {
   try {
     //verify product if exists in db
     const idProduct = req.params.id;
@@ -154,11 +113,7 @@ const updateProduct = async (
   }
 };
 
-const deleteProduct = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const deleteProduct = async (req: Request, res: Response) => {
   try {
     //validate if product exists
     const { id } = req.params;

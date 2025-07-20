@@ -1,5 +1,8 @@
-import { IUserDAO } from "../dao/IUserDAO";
-import { IUser, IUser_ } from "../interfaces/models-intefaces/user.interface";
+import { IUserDAO } from "../../dao/user/IUserDAO";
+import {
+  IUser,
+  IUser_,
+} from "../../interfaces/models-intefaces/user.interface";
 import {
   IUserService,
   userParamsToUpdate,
@@ -65,7 +68,7 @@ export class UserService implements IUserService {
     const userExists = await this.db.getUserByEmail(email);
 
     if (!userExists) {
-      throw "Invalid credentials";
+      throw new Error("Invalid credentials");
     }
 
     //compare passwords
@@ -75,7 +78,7 @@ export class UserService implements IUserService {
     );
 
     if (!validatePassword) {
-      throw "Invalid credentialss";
+      throw new Error("Invalid credentialss");
     }
 
     //return user without password
@@ -98,12 +101,12 @@ export class UserService implements IUserService {
     const user = await this.db.getUser(userId);
 
     if (!user) {
-      throw "Invalid cretentials !";
+      throw new Error("Invalid cretentials !");
     }
 
     //compare user from db to user from req.user
     if (userId !== userIdLogged) {
-      throw "Unauthorized: user mismatch!";
+      throw new Error("Unauthorized: user mismatch!");
     }
 
     //update user info
@@ -129,25 +132,25 @@ export class UserService implements IUserService {
     const user = await this.db.getUser(userId);
 
     if (!user) {
-      throw "User not found!";
+      throw new Error("User not found!");
     }
 
     if (userId !== userIdLogged) {
-      throw "Unauthorized: user mismatch!";
+      throw new Error("Unauthorized: user mismatch!");
     }
 
     const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
 
     if (!isPasswordValid) {
-      throw "Incorrect current password!!";
+      throw new Error("Incorrect current password!!");
     }
 
     if (newPassword === oldPassword) {
-      throw "Password are the same, change them!!";
+      throw new Error("Password are the same, change them!!");
     }
 
     if (newPassword !== repetedPassword) {
-      throw "Passwords do not match!";
+      throw new Error("Passwords do not match!");
     }
 
     const newPasswordEncrypted = await bcrypt.hash(newPassword, 10);
@@ -165,11 +168,11 @@ export class UserService implements IUserService {
     const user = await this.db.getUser(userId);
 
     if (!user) {
-      throw "User not found!";
+      throw new Error("User not found!");
     }
 
     if (user._id !== userIdLogged) {
-      throw "Unauthorized: user mismatch!";
+      throw new Error("Unauthorized: user mismatch!");
     }
 
     await this.db.deleteUser(userId, false);

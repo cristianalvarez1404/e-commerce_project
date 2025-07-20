@@ -1,4 +1,4 @@
-import { IUser } from "../interfaces/models-intefaces/user.interface";
+import { IUser } from "../../interfaces/models-intefaces/user.interface";
 import { IUserDAO } from "./IUserDAO";
 
 class MySQLUserDAO implements IUserDAO {
