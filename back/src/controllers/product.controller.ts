@@ -24,8 +24,8 @@ const getProducts = async (req: Request, res: Response, next: NextFunction) => {
 const getProductById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    
-    const product = productService.getProductById(id)
+
+    const product = productService.getProductById(id);
     return res.status(200).json(product);
   } catch (error) {
     if (error instanceof Error) {
@@ -37,7 +37,6 @@ const getProductById = async (req: Request, res: Response) => {
 
 const createProduct = async (req: Request, res: Response) => {
   try {
-    
     const productSchemaValidation = z.object({
       title: z.string(),
       short_description: z.string(),
@@ -58,7 +57,7 @@ const createProduct = async (req: Request, res: Response) => {
 
     const productData = productDataValidation.data;
 
-    const productSaved = productService.createProduct(productData)
+    const productSaved = productService.createProduct(productData);
 
     return res.status(201).json(productSaved);
   } catch (error) {
@@ -70,7 +69,6 @@ const createProduct = async (req: Request, res: Response) => {
 
 const updateProduct = async (req: Request, res: Response) => {
   try {
-    //verify product if exists in db
     const idProduct = req.params.id;
     const productSaved = await Product.findById(idProduct);
 
@@ -80,7 +78,6 @@ const updateProduct = async (req: Request, res: Response) => {
         .json({ message: `Product with id ${idProduct} does not exists!` });
     }
 
-    //validate field append in the body request
     const productSchemaValidation = z.object({
       title: z.string().optional(),
       short_description: z.string().optional(),
@@ -99,12 +96,8 @@ const updateProduct = async (req: Request, res: Response) => {
 
     const productData = productDataValidation.data;
 
-    //update product in db
-    const newProduct = await Product.findByIdAndUpdate(idProduct, productData, {
-      new: true,
-    });
+    const newProduct = productService.updateProductById(idProduct, productData);
 
-    //return new product
     return res.status(200).json(newProduct);
   } catch (error) {
     error instanceof Error
@@ -115,19 +108,9 @@ const updateProduct = async (req: Request, res: Response) => {
 
 const deleteProduct = async (req: Request, res: Response) => {
   try {
-    //validate if product exists
     const { id } = req.params;
-    const isProductExists = await Product.findById(id);
+    productService.deleteProduct(id);
 
-    if (!isProductExists) {
-      return res
-        .status(400)
-        .json({ message: `Product with id ${id} does not exists!` });
-    }
-
-    //delete product
-    await isProductExists.deleteOne();
-    //return message
     return res.status(200).json({ message: "Product deleted sucessfully!" });
   } catch (error) {
     error instanceof Error

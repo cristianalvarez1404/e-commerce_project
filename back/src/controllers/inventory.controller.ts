@@ -1,17 +1,18 @@
 import { NextFunction, Request, Response } from "express";
 import z from "zod";
 import { CATEGORIES, COLORS, SIZE, TYPE_SHOP } from "../enums/shop.enums";
-import mongoose from "mongoose";
-import Product from "../models/mongoDB/product.model";
-import Inventory from "../models/mongoDB/inventory.model";
+import { InventoryService } from "../services/inventory/InventoryService";
+import { MongoInventoryDAO } from "../dao/inventory/MongoInventoryDAO";
+import { MongoProductDAO } from "../dao/product/MongoProductDAO";
 
-const getInventories = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const dbInventory = new MongoInventoryDAO();
+const dbProduct = new MongoProductDAO();
+
+const inventoryService = new InventoryService(dbInventory, dbProduct);
+
+const getInventories = async (req: Request, res: Response) => {
   try {
-    const inventories = await Inventory.find().sort({ createdAt: -1 });
+    const inventories = await inventoryService.getInventories();
     return res.status(200).json(inventories);
   } catch (error) {
     error instanceof Error
@@ -20,19 +21,11 @@ const getInventories = async (
   }
 };
 
-const getInventoryById = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const getInventoryById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const inventory = await Inventory.findById(id);
-
-    if (!inventory) {
-      return res.status(404).json({ message: "Inventory does not exists!" });
-    }
+    const inventory = await inventoryService.getInventoryById(id);
 
     return res.status(200).json(inventory);
   } catch (error) {
@@ -42,13 +35,8 @@ const getInventoryById = async (
   }
 };
 
-const createInventory = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const createInventory = async (req: Request, res: Response) => {
   try {
-    //validate field with zod
     const types = z.nativeEnum(TYPE_SHOP);
     const categories = z.nativeEnum(CATEGORIES);
     const colors = z.nativeEnum(COLORS);
@@ -71,37 +59,15 @@ const createInventory = async (
       return res.status(400).json({ message: inventoryValidated.error });
     }
 
-    //validate id object product with monoose types
-    if (!mongoose.Types.ObjectId.isValid(req.body.product_id)) {
-      return res.status(400).json({
-        message: `Product with id ${req.body.product_id} is not valid!`,
-      });
-    }
+    const productId = req.body.product_id;
+    const inventoryData = inventoryValidated.data;
 
-    const product = await Product.findById(req.body.product_id);
+    const inventory = inventoryService.createInventory(
+      productId,
+      inventoryData
+    );
 
-    if (!product) {
-      return res.status(404).json({
-        message: `Product with id ${req.body.product_id} does not exists!`,
-      });
-    }
-
-    //validate that product not contains inventory already created
-    if (product.inventory_id) {
-      return res.status(404).json({
-        message: `Product with id ${req.body.product_id} already have an inventory!`,
-      });
-    }
-
-    //create inventory
-    const newInventory = await Inventory.create(inventoryValidated.data);
-
-    //update product with inventory id
-    product.inventory_id = newInventory._id;
-    await product.save();
-
-    //return inventory
-    return res.status(201).json(newInventory);
+    return res.status(201).json(inventory);
   } catch (error) {
     error instanceof Error
       ? res.status(500).json({ message: error.message })
@@ -111,7 +77,6 @@ const createInventory = async (
 
 const updateInventory = async (req: Request, res: Response) => {
   try {
-    //validate inventory already exists
     const { id } = req.params;
 
     if (!req.body || Object.keys(req.body).length === 0) {
@@ -120,15 +85,6 @@ const updateInventory = async (req: Request, res: Response) => {
         .json({ message: "You have not assigned any fields" });
     }
 
-    const inventoryExists = await Inventory.findById(id);
-
-    if (!inventoryExists) {
-      return res
-        .status(404)
-        .json({ message: `Inventory with id ${id} does not exists!` });
-    }
-
-    //validate fields sended with zod
     const types = z.nativeEnum(TYPE_SHOP);
     const categories = z.nativeEnum(CATEGORIES);
     const colors = z.nativeEnum(COLORS);
@@ -151,54 +107,14 @@ const updateInventory = async (req: Request, res: Response) => {
       return res.status(400).json({ message: inventoryValidated.error });
     }
 
-    //validate id object product with monoose types
-    if (req.body.product_id) {
-      if (!mongoose.Types.ObjectId.isValid(req.body.product_id)) {
-        return res.status(400).json({
-          message: `Product with id ${req.body.product_id} is not valid!`,
-        });
-      }
-
-      const product = await Product.findById(req.body.product_id);
-
-      if (!product) {
-        return res.status(404).json({
-          message: `Product with id ${req.body.product_id} does not exists!`,
-        });
-      }
-
-      const productWithOldInventory = await Product.findOne({
-        inventory_id: id,
-      });
-
-      if (
-        productWithOldInventory &&
-        productWithOldInventory._id.toString() ===
-          inventoryValidated.data.product_id
-      ) {
-        return res.status(400).json({
-          message: "Product shared are the same to previous product!",
-        });
-      }
-
-      if (productWithOldInventory) {
-        productWithOldInventory.inventory_id = undefined;
-        await productWithOldInventory.save();
-      }
-
-      product.inventory_id = inventoryExists._id;
-
-      await product.save();
-    }
-
-    //update inventory and product
-    const updatedInventory = await Inventory.findByIdAndUpdate(
+    const productId = req.body.product_id;
+    const inventoryToUpdate = inventoryValidated.data;
+    const updatedInventory = inventoryService.updateInventoryById(
       id,
-      inventoryValidated.data,
-      { new: true }
+      productId,
+      inventoryToUpdate
     );
 
-    //return inventory
     return res.status(201).json(updatedInventory);
   } catch (error) {
     error instanceof Error
@@ -207,39 +123,19 @@ const updateInventory = async (req: Request, res: Response) => {
   }
 };
 
-const deleteInventory = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  //validate if inventory exists
-  const { id } = req.params;
+const deleteInventory = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ message: "Invalid inventory ID" });
+    await inventoryService.deleteInventoryById(id);
+    return res
+      .status(200)
+      .json({ message: `Inventory with id ${id} has been deleted!` });
+  } catch (error) {
+    error instanceof Error
+      ? res.status(500).json({ message: error.message })
+      : res.status(400).json({ message: error });
   }
-
-  const inventoryExists = await Inventory.findById(id);
-
-  if (!inventoryExists) {
-    return res.status(404).json({ message: "Inventory does not exists" });
-  }
-
-  //delete product's inventory
-  const product = await Product.findOne({ inventory_id: id });
-
-  if (product) {
-    product.inventory_id = undefined;
-    await product.save();
-  }
-
-  //delete inventory
-  await inventoryExists.deleteOne();
-
-  //return message
-  return res
-    .status(200)
-    .json({ message: `Inventory with id ${id} has been deleted!` });
 };
 
 export {

@@ -1,6 +1,10 @@
 import { IProductDAO } from "../../dao/product/IProductDAO";
 import { IProduct } from "../../interfaces/models-intefaces/product.interface";
-import { IProductService, ProductData } from "./IProductService";
+import {
+  IProductService,
+  ProductData,
+  ProductDataToUpdate,
+} from "./IProductService";
 
 export class ProductService implements IProductService {
   constructor(private db: IProductDAO) {}
@@ -22,6 +26,9 @@ export class ProductService implements IProductService {
     }
 
     return product;
+  }
+  public async getProductByParam(param: any) {
+    return await this.db.getProductByParam(param);
   }
   public async createProduct(productData: ProductData) {
     const productExist = await this.db.getProductByReference(
@@ -48,6 +55,23 @@ export class ProductService implements IProductService {
 
     return productSaved;
   }
-  public async updateProductById() {}
-  public async deleteProduct() {}
+  public async updateProductById(id: string, productData: ProductDataToUpdate) {
+    const newProduct = await this.db.updateProductById(id, productData, {
+      new: true,
+    });
+
+    return newProduct;
+  }
+  public async deleteProduct(id: string) {
+    const isProductExists = await this.db.getProductById(id);
+
+    if (!isProductExists) {
+      throw new Error(`Product with id ${id} does not exists!`);
+    }
+
+    await this.db.deleteProduct(id);
+  }
+  public async saveProduct(product: IProduct) {
+    await this.db.saveProduct(product);
+  }
 }

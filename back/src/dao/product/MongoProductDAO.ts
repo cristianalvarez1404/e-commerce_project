@@ -1,4 +1,8 @@
-import { IProductDAO, newProductData } from "./IProductDAO";
+import {
+  IProductDAO,
+  newProductData,
+  ProductDataToUpdate,
+} from "./IProductDAO";
 import { IProduct } from "../../interfaces/models-intefaces/product.interface";
 import Product from "../../models/mongoDB/product.model";
 import mongoose from "mongoose";
@@ -35,6 +39,14 @@ export class MongoProductDAO implements IProductDAO {
     }
   }
 
+  public async getProductByParam(param: any): Promise<IProduct | null> {
+    try {
+      return await Product.findOne(param);
+    } catch (erro) {
+      return null;
+    }
+  }
+
   public async createProductId(id: string): Promise<mongoose.Types.ObjectId> {
     return new mongoose.Types.ObjectId(id);
   }
@@ -49,13 +61,37 @@ export class MongoProductDAO implements IProductDAO {
     }
   }
 
-  public async updateProductById(): Promise<void> {
+  public async updateProductById(
+    id: string,
+    productData: ProductDataToUpdate,
+    options: { new: boolean }
+  ): Promise<IProduct | null> {
     try {
-    } catch (error) {}
+      return await Product.findByIdAndUpdate(id, productData, options);
+    } catch (error) {
+      return null;
+    }
   }
 
-  public async deleteProduct(): Promise<void> {
+  public async deleteProduct(id: string): Promise<void | null> {
     try {
-    } catch (error) {}
+      await Product.findByIdAndDelete(id);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  public async saveProduct(product: IProduct): Promise<void | null> {
+    try {
+      const searchProduct = await Product.findByIdAndUpdate(product._id, {
+        ...product,
+      });
+    } catch (error) {
+      return null;
+    }
+  }
+
+  public async validateObjectId(productId: string): Promise<boolean> {
+    return !mongoose.Types.ObjectId.isValid(productId);
   }
 }

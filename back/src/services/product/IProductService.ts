@@ -10,10 +10,23 @@ export type ProductData = {
   comments?: string[] | undefined;
 };
 
+export type ProductDataToUpdate = {
+  title?: string;
+  short_description?: string;
+  price?: number;
+  reference?: string;
+  inventory_id?: string;
+};
+
 export interface IProductService {
   getProducts(): Promise<IProduct[] | null>;
   getProductById(id: string): Promise<IProduct | null>;
+  getProductByParam(param: any): Promise<IProduct | null>;
   createProduct(productData: ProductData): Promise<IProduct | null>;
-  updateProductById(): void;
-  deleteProduct(): void;
+  updateProductById(
+    id: string,
+    productData: ProductDataToUpdate
+  ): Promise<IProduct | null>;
+  deleteProduct(id: string): Promise<void | null>;
+  saveProduct(product: IProduct): void;
 }

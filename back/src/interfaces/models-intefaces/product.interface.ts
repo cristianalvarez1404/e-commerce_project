@@ -1,11 +1,12 @@
 import mongoose, { Types } from "mongoose";
 
 export interface IProduct extends Document {
+  _id: mongoose.Types.ObjectId | string;
   title: string;
   short_description: string;
   price: number;
   reference: string; //validate product is unique
-  inventory_id?: mongoose.Types.ObjectId;
+  inventory_id?: mongoose.Types.ObjectId | string;
   image_id?: mongoose.Types.ObjectId;
   comments?: mongoose.Types.ObjectId[];
 }
