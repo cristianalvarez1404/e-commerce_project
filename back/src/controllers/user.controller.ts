@@ -1,11 +1,16 @@
 import { NextFunction, Request, Response } from "express";
 import { UserService } from "../services/user/user.service";
 import { MongoUserDAO } from "../dao/user/MongoUserDAO";
+import { UserIdParamsDTO } from "../dto/user/userIDParamsDTO";
+import { CreateUserDto } from "../dto/user/createUserDTO";
+import { LoginUserDTO } from "../dto/user/LoginUserDTO";
+import { UpdateUserDTO } from "../dto/user/updateUserDTO";
+import { UpdatePasswordUserDTO } from "../dto/user/updatePasswordUserDTO";
 
 const db = new MongoUserDAO();
 const userService = new UserService(db);
 
-const getUsers = async (req: Request, res: Response, next: NextFunction) => {
+const getUsers = async (req: Request, res: Response) => {
   try {
     const users = await userService.getUsers();
 
@@ -22,9 +27,17 @@ const getUsers = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-const getUser = async (req: Request, res: Response, next: NextFunction) => {
+const getUser = async (req: Request, res: Response) => {
   try {
-    const idUser = req.params.id;
+    const idExists = UserIdParamsDTO.safeParse(req.params);
+
+    if (!idExists.success) {
+      return res
+        .status(400)
+        .json({ message: "Invalid ID " + idExists.error.flatten() });
+    }
+
+    const idUser = idExists.data.id;
 
     if (req.user._id.toString() !== idUser) {
       return res.status(403).json({ message: "You don't have permission!" });
@@ -46,7 +59,17 @@ const getUser = async (req: Request, res: Response, next: NextFunction) => {
 
 const createUser = async (req: Request, res: Response) => {
   try {
-    const userData = req.body;
+    const checkUserDataInDTO = CreateUserDto.safeParse(req.body);
+
+    if (!checkUserDataInDTO.success) {
+      return res.status(400).json({
+        message:
+          "Please check your data sended : " +
+          checkUserDataInDTO.error.flatten(),
+      });
+    }
+
+    const userData = checkUserDataInDTO.data;
     const { user, token } = await userService.createUser(userData);
 
     const cookieConfig = {
@@ -61,15 +84,17 @@ const createUser = async (req: Request, res: Response) => {
   }
 };
 
-const login = async (req: Request, res: Response, next: NextFunction) => {
+const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const validateData = LoginUserDTO.safeParse(req.body);
 
-    if (!email || !password) {
+    if (!validateData.success) {
       return res
         .status(400)
         .json({ message: "Please check all fields required to login" });
     }
+
+    const { email, password } = validateData.data;
 
     const { user, token } = await userService.login(email, password);
 
@@ -88,7 +113,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-const logout = (req: Request, res: Response, next: NextFunction) => {
+const logout = (req: Request, res: Response) => {
   try {
     res.clearCookie("token", {
       httpOnly: true,
@@ -104,10 +129,27 @@ const logout = (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-const updateUser = async (req: Request, res: Response, next: NextFunction) => {
+const updateUser = async (req: Request, res: Response) => {
   try {
-    const userId = req.params.id;
-    const { username, phone, address } = req.body;
+    const validateUserId = UserIdParamsDTO.safeParse(req.params);
+
+    if (!validateUserId.success) {
+      return res
+        .status(400)
+        .json({ message: "Invalid ID " + validateUserId.error.flatten() });
+    }
+
+    const validateBodyUserToUpdate = UpdateUserDTO.safeParse(req.body);
+
+    if (!validateBodyUserToUpdate.success) {
+      return res.status(400).json({
+        message:
+          "Check your body fields " + validateBodyUserToUpdate.error.flatten(),
+      });
+    }
+
+    const userId = validateUserId.data;
+    const { username, phone, address } = validateBodyUserToUpdate.data;
 
     if (!userId)
       return res
@@ -121,7 +163,7 @@ const updateUser = async (req: Request, res: Response, next: NextFunction) => {
     }
 
     const userParams = {
-      userId,
+      userId: userId.id,
       userIdLogged: req.user._id.toString(),
       username,
       phone,
@@ -141,16 +183,23 @@ const updateUser = async (req: Request, res: Response, next: NextFunction) => {
 
 const updatePassword = async (req: Request, res: Response) => {
   try {
-    const userId = req.params.id;
-    const { newPassword, repetedPassword, oldPassword } = req.body;
+    const validateUserId = UserIdParamsDTO.safeParse(req.params);
 
-    if (!userId)
+    if (!validateUserId.success) {
       return res
         .status(400)
-        .json({ message: "User ID  is required in params!" });
+        .json({ message: "Invalid ID " + validateUserId.error.flatten() });
+    }
 
-    if (!newPassword || !repetedPassword || !oldPassword)
+    const validateUserPasswords = UpdatePasswordUserDTO.safeParse(req.body);
+
+    if (!validateUserPasswords.success) {
       return res.status(400).json({ message: "Field are incompleted!" });
+    }
+
+    const userId = validateUserId.data;
+    const { newPassword, repetedPassword, oldPassword } =
+      validateUserPasswords.data;
 
     if (!req.user) {
       return res
@@ -159,7 +208,7 @@ const updatePassword = async (req: Request, res: Response) => {
     }
 
     const userParams = {
-      userId,
+      userId: userId.id,
       userIdLogged: req.user._id.toString(),
       oldPassword,
       repetedPassword,
@@ -179,18 +228,23 @@ const updatePassword = async (req: Request, res: Response) => {
   }
 };
 
-const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+const deleteUser = async (req: Request, res: Response) => {
   try {
-    const userId = req.params.id;
+    const validateUserId = UserIdParamsDTO.safeParse(req.params);
 
-    if (!userId)
+    if (!validateUserId.success) {
       return res
         .status(400)
-        .json({ message: "User ID  is required in params!" });
+        .json({ message: "Invalid ID " + validateUserId.error.flatten() });
+    }
 
     if (!req.user) {
       return res.status(401).json({ message: "You have to login!" });
     }
+
+    const userId = validateUserId.data.id;
+
+    await userService.deleteUser(userId, req.user);
 
     return res
       .status(200)

@@ -71,7 +71,6 @@ export class UserService implements IUserService {
       throw new Error("Invalid credentials");
     }
 
-    //compare passwords
     const validatePassword = await bcrypt.compare(
       password,
       userExists.password
@@ -81,7 +80,6 @@ export class UserService implements IUserService {
       throw new Error("Invalid credentialss");
     }
 
-    //return user without password
     const { password: _, ...userWithoutPassword } = userExists;
 
     const token = jwt.sign(
