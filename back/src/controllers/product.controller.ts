@@ -1,14 +1,14 @@
-import mongoose from "mongoose";
-import { NextFunction, Request, Response } from "express";
-import Product from "../models/mongoDB/product.model";
-import { z } from "zod";
+import { Request, Response } from "express";
 import { MongoProductDAO } from "../dao/product/MongoProductDAO";
 import { ProductService } from "../services/product/product.service";
+import { ProductIDParamsDTO } from "../dto/product/productIDParamsDTO";
+import { CreateProductDTO } from "../dto/product/createProductDTO";
+import { UpdateProductDTO } from "../dto/product/updateProductDTO";
 
 const db = new MongoProductDAO();
 const productService = new ProductService(db);
 
-const getProducts = async (req: Request, res: Response, next: NextFunction) => {
+const getProducts = async (req: Request, res: Response) => {
   try {
     const products = await productService.getProducts();
 
@@ -23,9 +23,13 @@ const getProducts = async (req: Request, res: Response, next: NextFunction) => {
 
 const getProductById = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = ProductIDParamsDTO.safeParse(req.params);
 
-    const product = productService.getProductById(id);
+    if (!id.success) {
+      return res.status(400).json({ message: "Id does not exist" });
+    }
+
+    const product = await productService.getProductById(id.data.id);
     return res.status(200).json(product);
   } catch (error) {
     if (error instanceof Error) {
@@ -37,17 +41,7 @@ const getProductById = async (req: Request, res: Response) => {
 
 const createProduct = async (req: Request, res: Response) => {
   try {
-    const productSchemaValidation = z.object({
-      title: z.string(),
-      short_description: z.string(),
-      price: z.number().min(1),
-      reference: z.string(),
-      inventory_id: z.string().optional(),
-      image_id: z.string().optional(),
-      comments: z.array(z.string()).optional(),
-    });
-
-    const productDataValidation = productSchemaValidation.safeParse(req.body);
+    const productDataValidation = CreateProductDTO.safeParse(req.body);
 
     if (!productDataValidation.success) {
       return res
@@ -57,7 +51,7 @@ const createProduct = async (req: Request, res: Response) => {
 
     const productData = productDataValidation.data;
 
-    const productSaved = productService.createProduct(productData);
+    const productSaved = await productService.createProduct(productData);
 
     return res.status(201).json(productSaved);
   } catch (error) {
@@ -69,24 +63,13 @@ const createProduct = async (req: Request, res: Response) => {
 
 const updateProduct = async (req: Request, res: Response) => {
   try {
-    const idProduct = req.params.id;
-    const productSaved = await Product.findById(idProduct);
+    const idProduct = ProductIDParamsDTO.safeParse(req.params);
 
-    if (!productSaved) {
-      return res
-        .status(400)
-        .json({ message: `Product with id ${idProduct} does not exists!` });
+    if (!idProduct.success) {
+      return res.status(400).json({ message: "Id does not exist" });
     }
 
-    const productSchemaValidation = z.object({
-      title: z.string().optional(),
-      short_description: z.string().optional(),
-      price: z.number().min(1).optional(),
-      reference: z.string().optional(),
-      inventory_id: z.string().optional(),
-    });
-
-    const productDataValidation = productSchemaValidation.safeParse(req.body);
+    const productDataValidation = UpdateProductDTO.safeParse(req.body);
 
     if (!productDataValidation.success) {
       return res
@@ -96,7 +79,10 @@ const updateProduct = async (req: Request, res: Response) => {
 
     const productData = productDataValidation.data;
 
-    const newProduct = productService.updateProductById(idProduct, productData);
+    const newProduct = await productService.updateProductById(
+      idProduct.data.id,
+      productData
+    );
 
     return res.status(200).json(newProduct);
   } catch (error) {
@@ -108,8 +94,13 @@ const updateProduct = async (req: Request, res: Response) => {
 
 const deleteProduct = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    productService.deleteProduct(id);
+    const id = ProductIDParamsDTO.safeParse(req.params);
+
+    if (!id.success) {
+      return res.status(400).json({ message: "Id does not exist" });
+    }
+
+    await productService.deleteProduct(id.data.id);
 
     return res.status(200).json({ message: "Product deleted sucessfully!" });
   } catch (error) {

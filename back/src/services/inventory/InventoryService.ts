@@ -94,7 +94,10 @@ export class InventoryService implements IInventoryService {
         throw new Error("Product shared are the same to previous product!");
       }
 
-      if (productWithOldInventory) {
+      if (
+        productWithOldInventory &&
+        productWithOldInventory._id.toString() !== inventoryValidated.product_id
+      ) {
         productWithOldInventory.inventory_id = undefined;
         await this.dbProduct.saveProduct(productWithOldInventory);
       }

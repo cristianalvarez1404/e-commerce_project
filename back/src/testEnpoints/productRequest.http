@@ -10,7 +10,7 @@ GET http://localhost:3000/products/686bf9af6eabe4eb3cc04491
 GET http://localhost:3000/products/686bf9af6eabe4eb3cc04491
 
 ###
-GET http://localhost:3000/products/686bf9af6eabe4eb3cc04491
+GET http://localhost:3000/products/6882928e32bb62865323fccd
 
 ### CREATE PRODUCT
 
@@ -18,27 +18,27 @@ POST http://localhost:3000/products
 Content-Type: application/json
 
 {
-  "title":"product 6",
-  "short_description":"short description 6",
-  "price": 202,
-  "reference":"SHIRT700" 
+  "title":"product 10",
+  "short_description":"short description 10",
+  "price": 500,
+  "reference":"SHIRT300" 
 }
 
 ### UPDATE PRODUCT
 
-PUT http://localhost:3000/products/686bfa2f7531bca8d4ccf11d
+PUT http://localhost:3000/products/6882928e32bb62865323fccd
 Content-Type: application/json
 
 {
-  "title":"product 6",
-  "short_description":"update short description 6",
-  "price": "235",
+  "title":"product 10",
+  "short_description":"update short description 10",
+  "price": 800,
   "reference":"SHIRT660" 
 }
 
 ### DELETE PRODUCT
 
-DELETE http://localhost:3000/products/686e9a5c51114a55c692c22e
+DELETE http://localhost:3000/products/6882928e32bb62865323fccd
 Content-Type: application/json
 
 {

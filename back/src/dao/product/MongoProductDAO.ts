@@ -31,9 +31,11 @@ export class MongoProductDAO implements IProductDAO {
     reference: string
   ): Promise<IProduct | null> {
     try {
-      return await Product.findOne({
+      const product = await Product.findOne({
         reference,
       });
+
+      return product;
     } catch (error) {
       return null;
     }
@@ -83,9 +85,15 @@ export class MongoProductDAO implements IProductDAO {
 
   public async saveProduct(product: IProduct): Promise<void | null> {
     try {
-      const searchProduct = await Product.findByIdAndUpdate(product._id, {
-        ...product,
-      });
+      const { _id, ...data } = product;
+
+      const update: Record<string, any> = { ...data };
+
+      if (product.inventory_id === undefined || product.inventory_id === "") {
+        update.$unset = { inventory_id: "" };
+      }
+
+      await Product.findByIdAndUpdate(_id, update, { new: true });
     } catch (error) {
       return null;
     }

@@ -39,8 +39,17 @@ export class ProductService implements IProductService {
       throw new Error("Product already exists with this reference");
     }
 
-    const inventoryId = this.db.getProductById(productData.inventory_id || "");
-    const imageId = this.db.getProductById(productData.image_id || "");
+    let inventoryId = undefined;
+
+    if (productData.inventory_id) {
+      inventoryId = this.db.getProductById(productData.inventory_id);
+    }
+
+    let imageId = undefined;
+
+    if (productData.image_id) {
+      imageId = this.db.getProductById(productData.image_id);
+    }
 
     const newProductData = {
       ...productData,
@@ -56,6 +65,11 @@ export class ProductService implements IProductService {
     return productSaved;
   }
   public async updateProductById(id: string, productData: ProductDataToUpdate) {
+    const productSaved = await this.db.getProductById(id);
+
+    if (!productSaved) {
+      throw new Error(`Product with id ${id} does not exists!`);
+    }
     const newProduct = await this.db.updateProductById(id, productData, {
       new: true,
     });

@@ -1,8 +1,10 @@
-import { NextFunction, Request, Response } from "express";
-import { z } from "zod";
+import { Request, Response } from "express";
 import { CommentService } from "../services/comment/CommentService";
 import { MongoCommentDAO } from "../dao/comments/MongoCommentDAO";
 import { MongoProductDAO } from "../dao/product/MongoProductDAO";
+import { CommentIDParamDTO } from "../dto/comment/commetIDParamDTO";
+import { CreateCommentDTO } from "../dto/comment/createCommentDTO";
+import { UpdateCommentDTO } from "../dto/comment/updateCommentDTO";
 
 const dbComment = new MongoCommentDAO();
 const dbProduct = new MongoProductDAO();
@@ -23,8 +25,13 @@ const getComments = async (req: Request, res: Response) => {
 
 const getCommentById = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const comment = commentService.getCommentById(id);
+    const id = CommentIDParamDTO.safeParse(req.params);
+
+    if (!id.success) {
+      return res.status(400).json({ message: "Id does not exist" });
+    }
+
+    const comment = await commentService.getCommentById(id.data.id);
 
     return res.status(200).json(comment);
   } catch (error) {
@@ -37,14 +44,7 @@ const getCommentById = async (req: Request, res: Response) => {
 
 const createComment = async (req: Request, res: Response) => {
   try {
-    const schemaCommentToValidate = z.object({
-      product_id: z.string(),
-      comment: z.string().min(3),
-      liked: z.boolean().optional(),
-      star: z.number().int().min(0).max(5).optional(),
-    });
-
-    const validateComment = schemaCommentToValidate.safeParse(req.body);
+    const validateComment = CreateCommentDTO.safeParse(req.body);
 
     if (!validateComment.data) {
       return res.status(400).json({ message: validateComment.error });
@@ -52,7 +52,7 @@ const createComment = async (req: Request, res: Response) => {
 
     const comment = validateComment.data;
     const userId = req.user._id.toString();
-    const newComment = commentService.createComment(comment, userId);
+    const newComment = await commentService.createComment(comment, userId);
 
     return res.status(201).json(newComment);
   } catch (error) {
@@ -65,16 +65,13 @@ const createComment = async (req: Request, res: Response) => {
 
 const updateCommentById = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = CommentIDParamDTO.safeParse(req.params);
 
-    const schemaCommentToValidate = z.object({
-      product_id: z.string().optional(),
-      comment: z.string().min(3).optional(),
-      liked: z.boolean().optional(),
-      star: z.number().int().min(0).max(5).optional(),
-    });
+    if (!id.success) {
+      return res.status(400).json({ message: "Id does not exist" });
+    }
 
-    const validateComment = schemaCommentToValidate.safeParse(req.body);
+    const validateComment = UpdateCommentDTO.safeParse(req.body);
 
     if (!validateComment.data) {
       return res.status(400).json({ message: validateComment.error });
@@ -84,8 +81,8 @@ const updateCommentById = async (req: Request, res: Response) => {
     const productId = req.body.product_id.toString();
     const newComment = validateComment.data;
 
-    const commentUpdated = commentService.updateCommentById(
-      id,
+    const commentUpdated = await commentService.updateCommentById(
+      id.data.id,
       userId,
       productId,
       newComment
@@ -102,11 +99,15 @@ const updateCommentById = async (req: Request, res: Response) => {
 
 const deleteCommentById = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = CommentIDParamDTO.safeParse(req.params);
+
+    if (!id.success) {
+      return res.status(400).json({ message: "Id does not exist" });
+    }
 
     const userId = req.user._id.toString();
 
-    await commentService.deleteCommentById(id, userId);
+    await commentService.deleteCommentById(id.data.id, userId);
 
     return res.status(200).json({ message: "Comment has been deleted" });
   } catch (error) {

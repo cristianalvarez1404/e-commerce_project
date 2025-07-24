@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import { UserService } from "../services/user/user.service";
 import { MongoUserDAO } from "../dao/user/MongoUserDAO";
 import { UserIdParamsDTO } from "../dto/user/userIDParamsDTO";
@@ -39,7 +39,7 @@ const getUser = async (req: Request, res: Response) => {
 
     const idUser = idExists.data.id;
 
-    if (req.user._id.toString() !== idUser) {
+    if (req.user._id.toString() !== idUser && req.user.typeUser !== "admin") {
       return res.status(403).json({ message: "You don't have permission!" });
     }
 
@@ -63,13 +63,12 @@ const createUser = async (req: Request, res: Response) => {
 
     if (!checkUserDataInDTO.success) {
       return res.status(400).json({
-        message:
-          "Please check your data sended : " +
-          checkUserDataInDTO.error.flatten(),
+        message: "Please check your data sended : " + checkUserDataInDTO.error,
       });
     }
 
     const userData = checkUserDataInDTO.data;
+
     const { user, token } = await userService.createUser(userData);
 
     const cookieConfig = {

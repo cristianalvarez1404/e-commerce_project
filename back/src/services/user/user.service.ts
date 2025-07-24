@@ -9,7 +9,7 @@ import {
   userUpdatePassword,
 } from "./IUserService";
 import bcrypt from "bcrypt";
-import jwt, { Jwt } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 export class UserService implements IUserService {
   constructor(private db: IUserDAO) {}
@@ -102,12 +102,10 @@ export class UserService implements IUserService {
       throw new Error("Invalid cretentials !");
     }
 
-    //compare user from db to user from req.user
     if (userId !== userIdLogged) {
       throw new Error("Unauthorized: user mismatch!");
     }
 
-    //update user info
     const updatedUser = await this.db.updateUser({
       userId,
       user: {
@@ -164,12 +162,13 @@ export class UserService implements IUserService {
 
   public async deleteUser(userId: string, userIdLogged: string) {
     const user = await this.db.getUser(userId);
+    const userLogged = await this.db.getUser(userIdLogged);
 
     if (!user) {
       throw new Error("User not found!");
     }
 
-    if (user._id !== userIdLogged) {
+    if (userLogged.typeUser !== "admin" && user._id !== userIdLogged) {
       throw new Error("Unauthorized: user mismatch!");
     }
 

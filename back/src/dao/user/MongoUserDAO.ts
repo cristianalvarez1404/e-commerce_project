@@ -30,7 +30,8 @@ export class MongoUserDAO implements IUserDAO {
   }
   public async getUserByEmail(email: string): Promise<IUser | null> {
     try {
-      return await User.findOne({ email }).select("+password");
+      const user = await User.findOne({ email }).select("+password");
+      return user ? (user.toObject() as IUser) : null;
     } catch (error) {
       return null;
     }
