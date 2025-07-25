@@ -5,7 +5,7 @@ export interface IProduct extends Document {
   title: string;
   short_description: string;
   price: number;
-  reference: string; //validate product is unique
+  reference: string;
   inventory_id?: mongoose.Types.ObjectId | string;
   image_id?: mongoose.Types.ObjectId;
   comments?: mongoose.Types.ObjectId[];

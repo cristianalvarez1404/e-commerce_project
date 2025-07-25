@@ -83,7 +83,9 @@ const updateCartById = async (req: Request, res: Response) => {
     const productsToUpdate: ProductToUpdate[] = validateProducts.data;
 
     if (
-      !productsToUpdate.every((p) => p.idProduct && p.prevUnits && p.unitsToBuy)
+      !productsToUpdate.every(
+        (p) => p.idProduct && p.prevUnits && p.unitsToBuy >= 0
+      )
     ) {
       return res
         .status(400)

@@ -111,7 +111,7 @@ const deleteInventory = async (req: Request, res: Response) => {
     await inventoryService.deleteInventoryById(id.data.id);
     return res
       .status(200)
-      .json({ message: `Inventory with id ${id} has been deleted!` });
+      .json({ message: `Inventory with id ${id.data.id} has been deleted!` });
   } catch (error) {
     error instanceof Error
       ? res.status(500).json({ message: error.message })

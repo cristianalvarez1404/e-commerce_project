@@ -31,7 +31,17 @@ export interface IProductDAO {
     productData: ProductDataToUpdate,
     options: { new: boolean }
   ): Promise<IProduct | null>;
+  uploadCommentById(
+    id: string,
+    comment_id: string,
+    options: { new: boolean }
+  ): Promise<IProduct | null>;
   deleteProduct(id: string): Promise<void | null>;
+  deleteCommentProductById(
+    id: string,
+    comment_id: string,
+    options: { new: boolean }
+  ): Promise<IProduct | null>;
   saveProduct(product: IProduct): Promise<void | null>;
   validateObjectId(id: string): Promise<boolean>;
 }

@@ -5,10 +5,12 @@ import { MongoProductDAO } from "../dao/product/MongoProductDAO";
 import { CommentIDParamDTO } from "../dto/comment/commetIDParamDTO";
 import { CreateCommentDTO } from "../dto/comment/createCommentDTO";
 import { UpdateCommentDTO } from "../dto/comment/updateCommentDTO";
+import { MongoUserDAO } from "../dao/user/MongoUserDAO";
 
 const dbComment = new MongoCommentDAO();
 const dbProduct = new MongoProductDAO();
-const commentService = new CommentService(dbComment, dbProduct);
+const dbUser = new MongoUserDAO();
+const commentService = new CommentService(dbComment, dbProduct, dbUser);
 
 const getComments = async (req: Request, res: Response) => {
   try {
@@ -77,8 +79,8 @@ const updateCommentById = async (req: Request, res: Response) => {
       return res.status(400).json({ message: validateComment.error });
     }
 
-    const userId = req.user._id.toString();
-    const productId = req.body.product_id.toString();
+    const userId = req.user._id;
+    const productId = req.body.product_id;
     const newComment = validateComment.data;
 
     const commentUpdated = await commentService.updateCommentById(

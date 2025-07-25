@@ -50,6 +50,7 @@ export class CartService implements ICartService {
     }
 
     const ids = products.map((p) => p.idProduct);
+
     const uniqueIds = new Set(ids);
 
     if (uniqueIds.size !== products.length) {
@@ -149,7 +150,16 @@ export class CartService implements ICartService {
       );
       if (!productToUpdate) continue;
 
-      let inventoryId = product.inventory_id?.toString();
+      let inventoryId: string | undefined;
+
+      if (
+        typeof product.inventory_id === "object" &&
+        "_id" in product.inventory_id
+      ) {
+        inventoryId = product.inventory_id._id.toString();
+      } else {
+        inventoryId = product.inventory_id?.toString(); // ya es string
+      }
 
       if (!inventoryId) {
         throw new Error(`Inventory not found for product ${productId}`);
@@ -202,7 +212,7 @@ export class CartService implements ICartService {
 
     for (const product of cartExists.products) {
       const productToUpdate = await this.dbProduct.getProductById(
-        product.product_id.toString()
+        product.product_id._id.toString()
       );
 
       if (!productToUpdate)
@@ -213,8 +223,20 @@ export class CartService implements ICartService {
       if (!productToUpdate.inventory_id) {
         throw new Error("Inventory does not exists!");
       }
+
+      let inventoryIdToSearch = "";
+
+      if (
+        typeof productToUpdate.inventory_id === "object" &&
+        "_id" in productToUpdate.inventory_id
+      ) {
+        inventoryIdToSearch = productToUpdate.inventory_id._id.toString();
+      } else {
+        inventoryIdToSearch = productToUpdate.inventory_id?.toString();
+      }
+
       const inventoryToUpdate = await this.dbInventory.getInventoryById(
-        productToUpdate.inventory_id?.toString()
+        inventoryIdToSearch
       );
 
       if (!inventoryToUpdate)

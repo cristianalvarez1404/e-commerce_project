@@ -21,6 +21,7 @@ export class MongoProductDAO implements IProductDAO {
       return await Product.find()
         .sort({ createdAt: -1 })
         .populate("inventory_id")
+        .populate("comments")
         .select("-__v");
     } catch (error) {
       return null;
@@ -75,6 +76,38 @@ export class MongoProductDAO implements IProductDAO {
     }
   }
 
+  public async uploadCommentById(
+    id: string,
+    comment_id: string,
+    options: { new: boolean }
+  ) {
+    try {
+      return await Product.findByIdAndUpdate(
+        id,
+        { $push: { comments: new mongoose.Types.ObjectId(comment_id) } },
+        options
+      );
+    } catch (error) {
+      return null;
+    }
+  }
+
+  public async deleteCommentProductById(
+    id: string,
+    comment_id: string,
+    options: { new: boolean }
+  ) {
+    try {
+      return await Product.findByIdAndUpdate(
+        id,
+        { $pull: { comments: new mongoose.Types.ObjectId(comment_id) } },
+        options
+      );
+    } catch (error) {
+      return null;
+    }
+  }
+
   public async deleteProduct(id: string): Promise<void | null> {
     try {
       await Product.findByIdAndDelete(id);
@@ -85,12 +118,16 @@ export class MongoProductDAO implements IProductDAO {
 
   public async saveProduct(product: IProduct): Promise<void | null> {
     try {
-      const { _id, ...data } = product;
+      const { _id, inventory_id, ...data } = product;
 
-      const update: Record<string, any> = { ...data };
+      const update: Record<string, any> = {};
 
-      if (product.inventory_id === undefined || product.inventory_id === "") {
+      update.$set = { ...data };
+
+      if (inventory_id === undefined || inventory_id === "") {
         update.$unset = { inventory_id: "" };
+      } else {
+        update.$set.inventory_id = inventory_id;
       }
 
       await Product.findByIdAndUpdate(_id, update, { new: true });

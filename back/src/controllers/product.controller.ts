@@ -28,7 +28,6 @@ const getProductById = async (req: Request, res: Response) => {
     if (!id.success) {
       return res.status(400).json({ message: "Id does not exist" });
     }
-
     const product = await productService.getProductById(id.data.id);
     return res.status(200).json(product);
   } catch (error) {

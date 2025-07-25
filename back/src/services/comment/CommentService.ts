@@ -1,5 +1,6 @@
 import { ICommentDAO } from "../../dao/comments/ICommentDAO";
 import { IProductDAO } from "../../dao/product/IProductDAO";
+import { IUserDAO } from "../../dao/user/IUserDAO";
 import { IComment } from "../../interfaces/models-intefaces/comment.interface";
 import {
   ICommentService,
@@ -8,7 +9,11 @@ import {
 } from "./ICommentService";
 
 export class CommentService implements ICommentService {
-  constructor(private dbComment: ICommentDAO, private dbProduct: IProductDAO) {}
+  constructor(
+    private dbComment: ICommentDAO,
+    private dbProduct: IProductDAO,
+    private dbUser: IUserDAO
+  ) {}
 
   public async getComments(): Promise<IComment[] | null> {
     const comments = await this.dbComment.getComments();
@@ -41,9 +46,19 @@ export class CommentService implements ICommentService {
     }
 
     const newComment = await this.dbComment.createComment(comment, userId);
+    if (!newComment || !newComment._id) {
+      throw new Error("Error creating comment");
+    }
+
+    await this.dbProduct.uploadCommentById(
+      comment.product_id,
+      newComment._id.toString(),
+      { new: true }
+    );
 
     return newComment;
   }
+
   public async updateCommentById(
     idComment: string,
     userId: string,
@@ -51,10 +66,15 @@ export class CommentService implements ICommentService {
     newComment: schemaCommentToUpdate
   ): Promise<IComment | null> {
     const comment = await this.dbComment.getCommentById(idComment);
+    const user = await this.dbUser.getUser(userId);
+
+    if (!user) {
+      throw new Error("User does not exist");
+    }
 
     if (!comment) throw new Error("Comment not exist");
 
-    if (comment.user_id.toString() !== userId) {
+    if (comment.user_id.toString() !== userId && user.typeUser !== "admin") {
       throw new Error("Unauthorized user");
     }
 
@@ -72,6 +92,7 @@ export class CommentService implements ICommentService {
 
     return commentUpdated;
   }
+
   public async deleteCommentById(
     commentId: string,
     userId: string
@@ -87,5 +108,19 @@ export class CommentService implements ICommentService {
     }
 
     await this.dbComment.deleteCommentById(commentId);
+
+    const product = await this.dbProduct.getProductById(
+      comment.product_id.toString()
+    );
+
+    if (!product) {
+      throw new Error("Product does not exist!");
+    }
+
+    await this.dbProduct.deleteCommentProductById(
+      product._id.toString(),
+      comment._id.toString(),
+      { new: true }
+    );
   }
 }

@@ -11,7 +11,7 @@ POST http://localhost:3000/comments
 Content-Type: application/json
 
 {
-    "product_id": "686bfa2f7531bca8d4ccf11d",
+    "product_id": "6882926c4a7c06ba7396ff63",
     "comment": "awesome product",
     "liked": true,
     "star": 5
@@ -22,14 +22,25 @@ POST http://localhost:3000/comments
 Content-Type: application/json
 
 {
-    "product_id": "686bfa2f7531bca8d4ccf11d",
+    "product_id": "6882926c4a7c06ba7396ff63",
     "comment": "give me back money bit**",
     "liked": false,
     "star": 1
 }
 
+###
+POST http://localhost:3000/comments
+Content-Type: application/json
+
+{
+    "product_id": "68828e6023c300c55715493e",
+    "comment": "Product low quality",
+    "liked": false,
+    "star": 2
+}
+
 ###  PUT - UPDATE COMMENT
-PUT http://localhost:3000/comments/6877d2a703d6fc0e2b5d1588
+PUT http://localhost:3000/comments/6883bd281c9f58cb87ff79d1
 Content-Type: application/json
 
 {
@@ -40,7 +51,7 @@ Content-Type: application/json
 }
 
 ###  DELETE - delete comment
-DELETE http://localhost:3000/comments/6876933b49cce121f7be8a9d
+DELETE http://localhost:3000/comments/6883bd351c9f58cb87ff79d6
 Content-Type: application/json
 
 {
